@@ -1,35 +1,32 @@
 const express = require('express');
-const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
 const bodyParser = require('body-parser');
-const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 const PORT = 3000;
 
-app.use(cors());
 app.use(bodyParser.json());
 
-mongoose.connect('mongodb://127.0.0.1:27017/ffUsers', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+const filePath = path.join(__dirname, 'users.json');
 
-const userSchema = new mongoose.Schema({
-  email: String,
-  password: String,
-});
+// Initialize file if not exists
+if (!fs.existsSync(filePath)) {
+  fs.writeFileSync(filePath, '[]');
+}
 
-const User = mongoose.model('User', userSchema);
-
-app.post('/register', async (req, res) => {
+app.post('/save', (req, res) => {
   const { email, password } = req.body;
-  const hashed = await bcrypt.hash(password, 10);
-  const newUser = new User({ email, password: hashed });
-  await newUser.save();
-  res.json({ message: "User saved successfully" });
+  const user = { email, password };
+
+  let users = JSON.parse(fs.readFileSync(filePath));
+  users.push(user);
+
+  fs.writeFileSync(filePath, JSON.stringify(users, null, 2));
+
+  res.json({ message: 'User saved successfully to file.' });
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running at http://localhost:${PORT}`);
 });
