@@ -1,2 +1,2 @@
 npm init -y
-npm install express mongoose bcrypt body-parser cors
+npm install express body-parser fs
